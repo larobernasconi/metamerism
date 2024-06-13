@@ -3,32 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title>Metamerism</title>
     <link rel="stylesheet" href="./assets/style/style.css">
-    <style>
-    </style>
+
 </head>
 <body>
     <div class="title">
-    <h1>bistro</h1>
-    <h2>hsl as seen as my camera lens sees </h2>
-</div>
-<div class="des">
-    <p>
-    descrizione cute
+        <h1>metamerism</h1>
+    </div>
+    <div class="des">
+        <p>a thousand images, a thousand hues, to explore. <br></p>
+    </div>
+    <div class="info">
+        <p> lara bernasconi <br>
+            supsi - mendrisio <br>
+        </p>
+        <p>
+            elaborato xl <br>
+            interaction design <br>
+                </p>
+                <p>
+                    <a class="corso" href="https://ixd-supsi.github.io/2024/">
+                428.01</a> <br>
+        Andreas Gysin <br>
+        Giovanni Profeta <br>
     </p>
 </div>
-<div class="index"></div>
-    <div>
-        <span id="sort-hue" class="sort-option">sort by hue</span>
-        <span id="sort-saturation" class="sort-option">sort by saturation</span>
-        <span id="sort-lightness" class="sort-option">sort by lightness</span>
+    <div class="categories">
+        <span class="category" data-hue="0-30">orange</span>
+        <span class="category" data-hue="30-90">yellow</span>
+        <span class="category" data-hue="90-150">green</span>
+        <span class="category" data-hue="150-210">cyan</span>
+        <span class="category" data-hue="210-270">blue</span>
+        <span class="category" data-hue="270-330">magenta</span>
+        <span class="category" data-hue="330-360">red</span>
     </div>
     <main></main>
+    <div class="tooltip" id="tooltip"></div>
     <script>
         function HexToHSL(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-
             if (!result) {
                 throw new Error("Could not parse Hex Color");
             }
@@ -89,16 +103,14 @@
             });
         }
 
-        function sortAndDisplay(sortFn) {
-            const sortedData = [...exifData].sort(sortFn);
-
+        function displayFilteredData(filteredData) {
             let output = "";
-            for (let i = 0; i < sortedData.length; i++) {
-                const fileName = sortedData[i].FileName;
+            for (let i = 0; i < filteredData.length; i++) {
+                const fileName = filteredData[i].FileName;
                 const HSL = colorDict[fileName][0];
 
                 output += `
-                    <div class="image-info">
+                    <div class="image-info" onmouseover="showTooltip(event, '${fileName}', ${HSL.h}, ${HSL.s}, ${HSL.l})" onmouseout="hideTooltip()">
                         <span class="color-box" style="background-color: hsl(${HSL.h}, ${HSL.s}%, ${HSL.l}%);"></span>
                     </div>
                 `;
@@ -106,30 +118,35 @@
             document.querySelector('main').innerHTML = output;
         }
 
-        function sortByHue(a, b) {
-            const HSL_a = colorDict[a.FileName][0];
-            const HSL_b = colorDict[b.FileName][0];
-            return HSL_a.h - HSL_b.h;
+        function filterByHueRange(hueRange) {
+            const [minHue, maxHue] = hueRange.split('-').map(Number);
+            const filteredData = exifData.filter(item => {
+                const HSL = colorDict[item.FileName][0];
+                return HSL.h >= minHue && HSL.h <= maxHue;
+            });
+
+            displayFilteredData(filteredData);
         }
 
-        function sortBySaturation(a, b) {
-            const HSL_a = colorDict[a.FileName][0];
-            const HSL_b = colorDict[b.FileName][0];
-            return HSL_a.s - HSL_b.s;
+        function showTooltip(event, fileName, h, s, l) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.innerHTML = `hue: ${h}<br>saturation: ${s}%<br>lightness: ${l}%`;
+            tooltip.style.display = 'block';
+            tooltip.style.left = `${event.pageX + 10}px`;
+            tooltip.style.top = `${event.pageY + 10}px`;
         }
 
-        function sortByLightness(a, b) {
-            const HSL_a = colorDict[a.FileName][0];
-            const HSL_b = colorDict[b.FileName][0];
-            return HSL_a.l - HSL_b.l;
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.display = 'none';
         }
 
         async function run() {
             await fetchData();
-            document.getElementById('sort-hue').addEventListener('click', () => sortAndDisplay(sortByHue));
-            document.getElementById('sort-saturation').addEventListener('click', () => sortAndDisplay(sortBySaturation));
-            document.getElementById('sort-lightness').addEventListener('click', () => sortAndDisplay(sortByLightness));
-            sortAndDisplay(sortByHue);
+            document.querySelectorAll('.category').forEach(category => {
+                category.addEventListener('click', (e) => filterByHueRange(e.target.getAttribute('data-hue')));
+            });
+            displayFilteredData(exifData); // Display all data by default
         }
 
         run();

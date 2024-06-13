@@ -65,7 +65,8 @@ Per sviluppare Metamerism, ho utilizzato due script, uno per permettermi di estr
 Per convertire i codici HEX a HSL ho utilizzato una funzione javascript di 
 James Milner – [HEX to HSL](https://www.jameslmilner.com/posts/converting-rgb-hex-hsl-colors/)
 
-```
+
+```javascript
  function HexToHSL(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             if (!result) {
@@ -115,8 +116,8 @@ James Milner – [HEX to HSL](https://www.jameslmilner.com/posts/converting-rgb-
 
             return { h, s, l };
         }
-
 ```
+
 
 ## Target e contesto d’uso
 

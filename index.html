@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+    </style>
+</head>
+<body>
+    <div class="title">
+    <h1>bistro</h1>
+    <h2>hsl as seen as my camera lens sees </h2>
+</div>
+<div class="des">
+    <p>
+    descrizione cute
+    </p>
+</div>
+<div class="index"></div>
+    <div>
+        <span id="sort-hue" class="sort-option">sort by hue</span>
+        <span id="sort-saturation" class="sort-option">sort by saturation</span>
+        <span id="sort-lightness" class="sort-option">sort by lightness</span>
+    </div>
+    <main></main>
+    <script>
+        function HexToHSL(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+
+            if (!result) {
+                throw new Error("Could not parse Hex Color");
+            }
+
+            const rHex = parseInt(result[1], 16);
+            const gHex = parseInt(result[2], 16);
+            const bHex = parseInt(result[3], 16);
+
+            const r = rHex / 255;
+            const g = gHex / 255;
+            const b = bHex / 255;
+
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+
+            let h = (max + min) / 2;
+            let s = h;
+            let l = h;
+
+            if (max === min) {
+                // Achromatic
+                return { h: 0, s: 0, l };
+            }
+
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r:
+                    h = (g - b) / d + (g < b ? 6 : 0);
+                    break;
+                case g:
+                    h = (b - r) / d + 2;
+                    break;
+                case b:
+                    h = (r - g) / d + 4;
+                    break;
+            }
+            h /= 6;
+
+            s = s * 100;
+            s = Math.round(s);
+            l = l * 100;
+            l = Math.round(l);
+            h = Math.round(360 * h);
+
+            return { h, s, l };
+        }
+
+        let exifData = [];
+        let colorDict = {};
+
+        async function fetchData() {
+            exifData = await fetch("./data/data_exif.json").then(r => r.json());
+            const colorData = await fetch("./data/data_colors.json").then(r => r.json());
+
+            colorData.forEach(color => {
+                colorDict[color.FileName] = color.Colors.map(hex => HexToHSL(hex));
+            });
+        }
+
+        function sortAndDisplay(sortFn) {
+            const sortedData = [...exifData].sort(sortFn);
+
+            let output = "";
+            for (let i = 0; i < sortedData.length; i++) {
+                const fileName = sortedData[i].FileName;
+                const HSL = colorDict[fileName][0];
+
+                output += `
+                    <div class="image-info">
+                        <span class="color-box" style="background-color: hsl(${HSL.h}, ${HSL.s}%, ${HSL.l}%);"></span>
+                    </div>
+                `;
+            }
+            document.querySelector('main').innerHTML = output;
+        }
+
+        function sortByHue(a, b) {
+            const HSL_a = colorDict[a.FileName][0];
+            const HSL_b = colorDict[b.FileName][0];
+            return HSL_a.h - HSL_b.h;
+        }
+
+        function sortBySaturation(a, b) {
+            const HSL_a = colorDict[a.FileName][0];
+            const HSL_b = colorDict[b.FileName][0];
+            return HSL_a.s - HSL_b.s;
+        }
+
+        function sortByLightness(a, b) {
+            const HSL_a = colorDict[a.FileName][0];
+            const HSL_b = colorDict[b.FileName][0];
+            return HSL_a.l - HSL_b.l;
+        }
+
+        async function run() {
+            await fetchData();
+            document.getElementById('sort-hue').addEventListener('click', () => sortAndDisplay(sortByHue));
+            document.getElementById('sort-saturation').addEventListener('click', () => sortAndDisplay(sortBySaturation));
+            document.getElementById('sort-lightness').addEventListener('click', () => sortAndDisplay(sortByLightness));
+            sortAndDisplay(sortByHue);
+        }
+
+        run();
+    </script>
+</body>
+</html>

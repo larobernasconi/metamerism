@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./assets/style/style.css">
     <style>
     </style>
 </head>
@@ -81,8 +81,8 @@
         let colorDict = {};
 
         async function fetchData() {
-            exifData = await fetch("./data/data_exif.json").then(r => r.json());
-            const colorData = await fetch("./data/data_colors.json").then(r => r.json());
+            exifData = await fetch("./assets/data/data_exif.json").then(r => r.json());
+            const colorData = await fetch("./assets/data/data_colors.json").then(r => r.json());
 
             colorData.forEach(color => {
                 colorDict[color.FileName] = color.Colors.map(hex => HexToHSL(hex));

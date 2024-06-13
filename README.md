@@ -18,128 +18,106 @@ Il principale riferimento progettuale di Metamerism è il concetto di archivio d
 
 ## Design dell’interfaccia e modalità di interazione
 
-L'interfaccia di Metamerism è progettata per essere intuitiva e coinvolgente. Al centro della schermata, le immagini sono disposte in categorie basate sulla tonalità di colore. Gli utenti possono cliccare su una categoria di colore per visualizzare le immagini associate a quella tonalità. Passando il mouse sopra un'immagine, si visualizzano ulteriori dettagli sulla percezione del colore sotto diverse condizioni di illuminazione.
+L'interfaccia di Metamerism è stata progetta pensando ad uno scroll pseudo infinito orizzontale. Al centro della schermata, i colori sono disposti inizialmente senza una categoria ma i bottoni con le categorie di colore ne permettono un sorting. Terminando passando il mouse sopra ogni colore, si visualizzano i dettagli di Hue, Saturation e Lightness (HSL).
 
-### Categorie di Colore
-
-Le categorie di colore permettono agli utenti di filtrare le immagini in base alla tonalità. Questo è gestito tramite elementi `<span>` che vengono collegati a un event listener in JavaScript per filtrare le immagini in base alla tonalità selezionata.
-
-#### HTML per le Categorie
-
-```html
-<div class="categories">
-    <span class="category" data-hue="0-30">orange</span>
-    <span class="category" data-hue="30-90">yellow</span>
-    <span class="category" data-hue="90-150">green</span>
-    <span class="category" data-hue="150-210">cyan</span>
-    <span class="category" data-hue="210-270">blue</span>
-    <span class="category" data-hue="270-330">magenta</span>
-    <span class="category" data-hue="330-360">red</span>
-</div>
-```
-
-#### JavaScript per Gestire le Categorie
-
-Quando l'utente clicca su una categoria di colore, l'evento `click` viene ascoltato e la funzione di callback `filterByHueRange` aggiorna la visualizzazione delle immagini in base alla tonalità selezionata.
-
-```javascript
-document.querySelectorAll('.category').forEach(category => {
-    category.addEventListener('click', (e) => filterByHueRange(e.target.getAttribute('data-hue')));
-});
-```
-
-### Visualizzazione delle Immagini
-
-Le immagini sono visualizzate nella sezione principale della pagina. Quando l'utente passa il mouse sopra un'immagine, appare un tooltip che mostra i dettagli sulla percezione del colore.
-
-#### HTML per la Sezione Principale
-
-```html
-<main></main>
-<div class="tooltip" id="tooltip"></div>
-```
-
-#### CSS per il Tooltip
-
-Il CSS definisce lo stile per il tooltip, rendendolo visibile sopra il contenuto principale quando viene attivato.
-
-```css
-/* tooltip.css */
-.tooltip {
-    position: absolute;
-    display: none;
-    background-color: white;
-    border: 1px solid black;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-```
-
-#### JavaScript per Gestire il Tooltip
-
-Le funzioni `showTooltip` e `hideTooltip` gestiscono la visualizzazione del tooltip. Quando l'utente passa il mouse sopra un'immagine, `showTooltip` mostra i dettagli sulla percezione del colore.
-
-```javascript
-function showTooltip(event, fileName, h, s, l) {
-    const tooltip = document.getElementById('tooltip');
-    tooltip.innerHTML = `hue: ${h}<br>saturation: ${s}%<br>lightness: ${l}%`;
-    tooltip.style.display = 'block';
-    tooltip.style.left = `${event.pageX + 10}px`;
-    tooltip.style.top = `${event.pageY + 10}px`;
-}
-
-function hideTooltip() {
-    const tooltip = document.getElementById('tooltip');
-    tooltip.style.display = 'none';
-}
-```
-
-### Integrazione delle Funzionalità
-
-Quando i dati delle immagini vengono caricati e le immagini sono disposte sullo schermo, ogni immagine è associata agli eventi `onmouseover` e `onmouseout` che chiamano rispettivamente `showTooltip` e `hideTooltip` con i dettagli dell'immagine.
 
 ## Tecnologia usata
 
-Per sviluppare Metamerism, ho utilizzato diverse tecnologie. La struttura HTML definisce la struttura base della pagina web, mentre CSS è utilizzato per lo stile e la presentazione visiva. Il cuore dell'interattività è gestito tramite JavaScript. L'uso di fetch API permette di caricare i dati delle immagini da file JSON esterni, rendendo l'archivio facilmente aggiornabile e manutenibile.
+Per sviluppare Metamerism, ho utilizzato due script, uno per permettermi di estrarre i metadati dalle immagini e il secondo per calcolarne il colore medio.
 
-### Funzione filterByHueRange
+### JSON colore  
 
-La funzione `filterByHueRange` è fondamentale per filtrare le immagini in base alla tonalità di colore selezionata. Essa utilizza JavaScript per confrontare le tonalità HSL delle immagini con la tonalità selezionata dall'utente e visualizzare solo le immagini corrispondenti.
+```
+{
+        "FileName": "1170eef4-9f45-48c9-8512-7272df7771b1",
+        "FileExtension": ".jpg",
+        "Colors": [
+            "#ca8184"
+        ]
+    },
+    {
+        "FileName": "11EB0DF2-0A81-40AE-BD27-5E80C9942D84",
+        "FileExtension": ".jpg",
+        "Colors": [
+            "#9b9488"
+        ]
+    },
+    {
+        "FileName": "126CF0FF-CE1A-4D5B-A03A-0DFD34333864",
+        "FileExtension": ".jpg",
+        "Colors": [
+            "#6c6c64"
+        ]
+    },
+    {
+        "FileName": "13F28300-E23C-4333-B89A-B22173342320",
+        "FileExtension": ".jpg",
+        "Colors": [
+            "#b2a99d"
+        ]
+    },
 
-```javascript
-function filterByHueRange(hueRange) {
-    const [minHue, maxHue] = hueRange.split('-').map(Number);
-    const filteredData = exifData.filter(item => {
-        const HSL = colorDict[item.FileName][0];
-        return HSL.h >= minHue && HSL.h <= maxHue;
-    });
 
-    displayFilteredData(filteredData);
-}
 ```
 
-### Funzione displayFilteredData
+### Conversione da HEX a HSL
 
-La funzione `displayFilteredData` è responsabile di visualizzare le immagini filtrate nella sezione principale della pagina. Essa aggiorna dinamicamente il contenuto HTML con le nuove immagini filtrate.
+Per convertire i codici HEX a HSL ho utilizzato una funzione javascript di 
+James Milner – [HEX to HSL](https://www.jameslmilner.com/posts/converting-rgb-hex-hsl-colors/)
 
-```javascript
-function displayFilteredData(filteredData) {
-    let output = "";
-    for (let i = 0; i < filteredData.length; i++) {
-        const fileName = filteredData[i].FileName;
-        const HSL = colorDict[fileName][0];
+```
+ function HexToHSL(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if (!result) {
+                throw new Error("Could not parse Hex Color");
+            }
 
-        output += `
-            <div class="image-info" onmouseover="showTooltip(event, '${fileName}', ${HSL.h}, ${HSL.s}, ${HSL.l})" onmouseout="hideTooltip()">
-                <span class="color-box" style="background-color: hsl(${HSL.h}, ${HSL.s}%, ${HSL.l}%);"></span>
-            </div>
-        `;
-    }
-    document.querySelector('main').innerHTML = output;
-}
+            const rHex = parseInt(result[1], 16);
+            const gHex = parseInt(result[2], 16);
+            const bHex = parseInt(result[3], 16);
+
+            const r = rHex / 255;
+            const g = gHex / 255;
+            const b = bHex / 255;
+
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+
+            let h = (max + min) / 2;
+            let s = h;
+            let l = h;
+
+            if (max === min) {
+                // Achromatic
+                return { h: 0, s: 0, l };
+            }
+
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r:
+                    h = (g - b) / d + (g < b ? 6 : 0);
+                    break;
+                case g:
+                    h = (b - r) / d + 2;
+                    break;
+                case b:
+                    h = (r - g) / d + 4;
+                    break;
+            }
+            h /= 6;
+
+            s = s * 100;
+            s = Math.round(s);
+            l = l * 100;
+            l = Math.round(l);
+            h = Math.round(360 * h);
+
+            return { h, s, l };
+        }
+
 ```
 
 ## Target e contesto d’uso
 
-Metamerism è rivolto a chiunque sia interessato alla percezione del colore, alla fotografia, al design e all'esplorazione delle diverse sfumature cromatiche. Questo include studenti, ricercatori, artisti, designer e chiunque sia curioso di scoprire nuove percezioni e interpretazioni dei colori. Il contesto d'uso principale è un ambiente educativo o culturale, dove gli utenti possono interagire con l'archivio digitale sia per scopi di apprendimento che di esplorazione personale.
+Metamerism è rivolto a studenti, ricercatori, artisti, designer e chiunque sia curioso di scoprire la palette colori del proprio rullino fotografico. Il contesto d'uso principale è fondamentalmente una ricerca/esplorazione personale.
